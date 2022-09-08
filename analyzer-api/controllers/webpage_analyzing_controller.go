@@ -7,6 +7,6 @@ import (
 
 func GetAnalyze(res http.ResponseWriter, req *http.Request) {
 
-	common.RespondwithJSON(res, 200, "success")
+	common.RespondwithJSON(res, 200, req.URL.Query().Get("url"))
 
 }

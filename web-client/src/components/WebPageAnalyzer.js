@@ -1,11 +1,16 @@
-import * as React from 'react';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardMedia from '@mui/material/CardMedia';
+import {useState} from 'react';
 import Typography from '@mui/material/Typography';
-import { Button, CardActionArea, CardActions, Grid, TextField, Box } from '@mui/material';
+import { Button, Grid, TextField, Box } from '@mui/material';
+import { getAnalyze } from '../api/webpage-analyzer';
 
 const WebPageAnalyzer = () => {
+
+    const [url, setURL] = useState("");
+
+    const analyzeWebpage = () => {
+        getAnalyze(url)
+    }
+
     return (
         <Grid container spacing={2} 
             sx={{
@@ -14,10 +19,16 @@ const WebPageAnalyzer = () => {
             }}
         >
         <Grid container item xs={8} direction="column">
-            <TextField id="url" label="URL to be analyzed" variant="outlined" />
+            <TextField id="url" label="URL to be analyzed" variant="outlined" 
+            value={url} 
+            onClick={() => setURL("")}
+            onChange={(e) => setURL(e.target.value)}
+            />
         </Grid>
         <Grid container item xs={4} >
-            <Button variant="contained">Analyze</Button>
+            <Button variant="contained"
+            onClick={() => analyzeWebpage()}
+            >Analyze</Button>
         </Grid>
         <Grid contriner item>
             <Box

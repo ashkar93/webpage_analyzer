@@ -26,7 +26,7 @@ func InitRouter() *chi.Mux {
 	r.Get("/", controllers.SayHelloworld)
 
 	//Webpage Analyze
-	r.Get("/analyze-webpage", controllers.GetAnalyze)
+	r.Get("/api/v1/analyze-webpage", controllers.GetAnalyze)
 
 	return r
 
