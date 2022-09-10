@@ -9,6 +9,5 @@ export async function getAnalyze(
       url
      }
   });
-  console.log(res);
   return res
 }

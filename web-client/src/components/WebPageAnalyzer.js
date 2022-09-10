@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import Typography from '@mui/material/Typography';
 import { Button, Grid, TextField, Box } from '@mui/material';
 import { getAnalyze } from '../api/webpage-analyzer';
@@ -6,10 +6,16 @@ import { getAnalyze } from '../api/webpage-analyzer';
 const WebPageAnalyzer = () => {
 
     const [url, setURL] = useState("");
+    const [scrapedData, setScrapedData] = useState({});
 
-    const analyzeWebpage = () => {
-        getAnalyze(url)
+    const analyzeWebpage = async () => {
+        let res = await getAnalyze(url)
+        setScrapedData(res.data.data);
     }
+
+    useEffect(()=>{
+        console.log(scrapedData);
+    },[scrapedData])
 
     return (
         <Grid container spacing={2} 
@@ -43,22 +49,31 @@ const WebPageAnalyzer = () => {
                     Analyzation report
                 </Typography>
                 <Typography variant="subtitle1" gutterBottom align='left'>
-                    HTML version: 5.1
+                {scrapedData.Version}
                 </Typography>
                 <Typography variant="subtitle1" gutterBottom align='left'>
-                    Page title: xxxxx
+                    Page title: {scrapedData.Title}
                 </Typography>
                 <Typography variant="subtitle1" gutterBottom align='left'>
-                    How many headings: xxxxx
+                    Headings count level wise: 
+                    {` H1:${scrapedData.H1} , H2:${scrapedData.H2} , H3:${scrapedData.H3} , H4:${scrapedData.H4} , 
+                    H5:${scrapedData.H5} , H6:${scrapedData.H6}`}
                 </Typography>
                 <Typography variant="subtitle1" gutterBottom align='left'>
-                    How many external and internal links: xxxxx
+                    External and internal links: {` External:${scrapedData.ExternalLink} , Internal:${scrapedData.InternalLink} `}
                 </Typography>
                 <Typography variant="subtitle1" gutterBottom align='left'>
-                    Are there any inaccessible links, if so how many: Yes, 5
+                    Inaccessible links: 
+                    {
+                        scrapedData.ExternalDeadLink+scrapedData.InternalDeadIdLink+scrapedData.InternalDeadPathLink > 0 ? "Yes," : "No"
+                    }
+                    {
+                        scrapedData.ExternalDeadLink+scrapedData.InternalDeadIdLink+scrapedData.InternalDeadPathLink > 0 ?
+                        ` External: ${scrapedData.ExternalDeadLink} , Internal ID: ${scrapedData.InternalDeadIdLink} , Internal Path: ${scrapedData.InternalDeadPathLink} ` : ""
+                    }
                 </Typography>
                 <Typography variant="subtitle1" gutterBottom align='left'>
-                    Is this page containing a login form: Yes
+                    Is this page containing a login form: { scrapedData.IsWithLogin ? "Yes" : "No" }
                 </Typography>
             </Box>
         </Grid>
