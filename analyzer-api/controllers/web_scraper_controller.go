@@ -3,14 +3,33 @@ package controllers
 import (
 	"example/sample/common"
 	"example/sample/services"
-	"fmt"
 	"net/http"
+	"strings"
 )
 
 func WebScraper(res http.ResponseWriter, req *http.Request) {
 
-	r := services.WebScraper(req.URL.Query().Get("url"))
-	fmt.Printf("%+v\n", *r)
+	url := strings.TrimSpace(req.URL.Query().Get("url"))
+
+	if url == "" {
+		common.RespondWithError(res, 400, "Not a valid URL")
+		return
+	}
+
+	_res, err := http.Get(url)
+
+	if err != nil {
+		common.RespondWithError(res, 400, err.Error())
+		return
+	}
+
+	if _res.StatusCode != 200 {
+		common.RespondWithError(res, _res.StatusCode, _res.Status)
+		return
+	}
+
+	r := services.WebScraper(url)
+
 	common.RespondwithJSON(res, 200, *r)
 
 }
