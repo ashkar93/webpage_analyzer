@@ -151,7 +151,7 @@ func validateLink(url string, linkType string, wg *sync.WaitGroup, scrapedData *
 
 	defer wg.Done()
 
-	if _, err := http.Get(url); err == nil {
+	if res, err := http.Get(url); err == nil && res.StatusCode == 200 {
 		return
 	}
 
