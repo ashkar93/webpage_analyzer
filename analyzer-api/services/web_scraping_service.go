@@ -16,7 +16,6 @@ func WebScraper(baseURL string) *dto.WebPageDetail {
 	var scrapedData = dto.WebPageDetail{}
 	var wg = sync.WaitGroup{}
 
-	//baseURL = "https://en.wikipedia.org/wiki/Web_scraping"
 	urlStruct, _ := url.Parse(baseURL)
 	host := strings.Split(baseURL, urlStruct.Path)[0]
 
@@ -28,112 +27,18 @@ func WebScraper(baseURL string) *dto.WebPageDetail {
 		wg.Add(1)
 		go c.OnHTML("head", func(e *colly.HTMLElement) {
 			scrapedData.Title = e.ChildText("title")
+			defer wg.Done()
 		})
-		defer wg.Done()
 	}()
 
-	func() {
-		wg.Add(1)
-		go c.OnHTML("h1", func(e *colly.HTMLElement) {
-			scrapedData.H1++
-		})
-		defer wg.Done()
-	}()
-
-	func() {
-		wg.Add(1)
-		go c.OnHTML("h2", func(e *colly.HTMLElement) {
-			scrapedData.H2++
-		})
-		defer wg.Done()
-	}()
-
-	func() {
-		wg.Add(1)
-		go c.OnHTML("h3", func(e *colly.HTMLElement) {
-			scrapedData.H3++
-		})
-		defer wg.Done()
-	}()
-
-	func() {
-		wg.Add(1)
-		go c.OnHTML("h4", func(e *colly.HTMLElement) {
-			scrapedData.H4++
-		})
-		defer wg.Done()
-	}()
-
-	func() {
-		wg.Add(1)
-		go c.OnHTML("h5", func(e *colly.HTMLElement) {
-			scrapedData.H5++
-		})
-		defer wg.Done()
-	}()
-
-	func() {
-		wg.Add(1)
-		go c.OnHTML("h6", func(e *colly.HTMLElement) {
-			scrapedData.H6++
-		})
-		defer wg.Done()
-	}()
-
-	func() {
-		wg.Add(1)
-		go c.OnHTML("body", func(e *colly.HTMLElement) {
-			for _, v := range e.ChildAttrs("a", "href") {
-
-				if !strings.Contains(v, "://") && !strings.HasPrefix(v, "//") {
-
-					scrapedData.InternalLink++
-
-					if strings.HasPrefix(v, "#") && e.ChildAttr(v, "id") == "" {
-						scrapedData.InternalDeadIdLink++
-						continue
-					}
-
-					wg.Add(1)
-					go validateLink(host+v, "internalPath", &wg, &scrapedData)
-					continue
-				}
-
-				scrapedData.ExternalLink++
-				wg.Add(1)
-				go validateLink(v, "external", &wg, &scrapedData)
-			}
-		})
-		defer wg.Done()
-	}()
-
-	func() {
-		wg.Add(1)
-		go c.OnHTML("body", func(e *colly.HTMLElement) {
-			e.ForEachWithBreak("a", func(i int, link *colly.HTMLElement) bool {
-				text := strings.TrimSpace(strings.ToLower(link.Text))
-				if text == "log in" || text == "sign in" || text == "login" {
-					scrapedData.IsWithLogin = true
-					return false
-				}
-				return true
-			})
-
-			if scrapedData.IsWithLogin {
-				return
-			}
-
-			e.ForEachWithBreak("button", func(i int, link *colly.HTMLElement) bool {
-				text := strings.TrimSpace(strings.ToLower(link.Text))
-				if text == "log in" || text == "sign in" {
-					scrapedData.IsWithLogin = true
-					return false
-				}
-				return true
-			})
-		})
-		defer wg.Done()
-	}()
+	go queryCollector("h1", c, &wg, &scrapedData)
+	go queryCollector("h2", c, &wg, &scrapedData)
+	go queryCollector("h3", c, &wg, &scrapedData)
+	go queryCollector("h4", c, &wg, &scrapedData)
+	go queryCollector("h5", c, &wg, &scrapedData)
+	go queryCollector("h6", c, &wg, &scrapedData)
+	go handleWebLinks(host, c, &wg, &scrapedData)
+	go handleWebLogin(c, &wg, &scrapedData)
 
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("Visiting", r.URL)
@@ -145,13 +50,104 @@ func WebScraper(baseURL string) *dto.WebPageDetail {
 
 }
 
-// some working external links in the app get failed with http.GET method
-// witch contains unsupported protocol scheme eg: {//, ://}, those links not handled
-func validateLink(url string, linkType string, wg *sync.WaitGroup, scrapedData *dto.WebPageDetail) {
+func handleWebLogin(c *colly.Collector,
+	wg *sync.WaitGroup, scrapedData *dto.WebPageDetail) {
+	wg.Add(1)
+	defer wg.Done()
+	c.OnHTML("body", func(e *colly.HTMLElement) {
+		e.ForEachWithBreak("a", func(i int, link *colly.HTMLElement) bool {
+			text := strings.TrimSpace(strings.ToLower(link.Text))
 
+			if text == "log in" || text == "sign in" || text == "login" {
+				scrapedData.IsWithLogin = true
+				return false
+			}
+			return true
+		})
+
+		if scrapedData.IsWithLogin {
+			return
+		}
+
+		e.ForEachWithBreak("button", func(i int, link *colly.HTMLElement) bool {
+			text := strings.TrimSpace(strings.ToLower(link.Text))
+			if text == "log in" || text == "sign in" {
+				scrapedData.IsWithLogin = true
+				return false
+			}
+			return true
+		})
+	})
+}
+
+func handleWebLinks(host string, c *colly.Collector,
+	wg *sync.WaitGroup, scrapedData *dto.WebPageDetail) {
+
+	wg.Add(1)
+	defer wg.Done()
+	c.OnHTML("body", func(e *colly.HTMLElement) {
+
+		for _, v := range e.ChildAttrs("a", "href") {
+
+			if !strings.Contains(v, "://") && !strings.HasPrefix(v, "//") {
+
+				scrapedData.InternalLink++
+
+				if strings.HasPrefix(v, "#") {
+					if e.ChildAttr(v, "id") == "" {
+						scrapedData.InternalDeadIdLink++
+						continue
+					}
+					continue
+				}
+
+				go validateWebLink(host+v, "internalPath", wg, scrapedData)
+				continue
+			}
+
+			scrapedData.ExternalLink++
+
+			go validateWebLink(v, "external", wg, scrapedData)
+		}
+
+	})
+
+}
+
+func queryCollector(goquerySelector string, c *colly.Collector,
+	wg *sync.WaitGroup, scrapedData *dto.WebPageDetail) {
+
+	wg.Add(1)
 	defer wg.Done()
 
-	if res, err := http.Get(url); err == nil && res.StatusCode == 200 {
+	c.OnHTML(goquerySelector, func(e *colly.HTMLElement) {
+
+		switch goquerySelector {
+		case "h1":
+			scrapedData.H1++
+		case "h2":
+			scrapedData.H2++
+		case "h3":
+			scrapedData.H3++
+		case "h4":
+			scrapedData.H4++
+		case "h5":
+			scrapedData.H5++
+		case "h6":
+			scrapedData.H6++
+
+		}
+	})
+
+}
+
+// some working external links in the app get failed with http.GET method
+// witch contains unsupported protocol scheme eg: {//, ://}, those links not handled
+func validateWebLink(url string, linkType string, wg *sync.WaitGroup, scrapedData *dto.WebPageDetail) {
+	wg.Add(1)
+	defer wg.Done()
+
+	if status, _ := ValidateURL(url); status == 200 {
 		return
 	}
 
@@ -161,4 +157,22 @@ func validateLink(url string, linkType string, wg *sync.WaitGroup, scrapedData *
 	case "external":
 		scrapedData.ExternalDeadLink++
 	}
+}
+
+func ValidateURL(_url string) (int, string) {
+
+	validatedURL, err := url.ParseRequestURI(_url)
+
+	if err != nil {
+		return 400, err.Error()
+	}
+
+	_res, err := http.Get(validatedURL.String())
+
+	if err != nil {
+		return 400, err.Error()
+	}
+
+	return _res.StatusCode, _res.Status
+
 }

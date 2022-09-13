@@ -12,7 +12,7 @@ func TestWebScraper(t *testing.T) {
 
 	sendRequest("/api/v1/analyze-webpage?url=https://developer.mozilla.org/en-US/docs-234/Web/HTTP/Status", 404, "expected status : 404 got %v", t)
 	sendRequest("/api/v1/analyze-webpage?url=https://developer.mozilla.org/en-US/docs/Web/HTTP/Status", 200, "expected status : 200 got %v", t)
-	sendRequest("/api/v1/analyze-webpage?url=", 400, "expected status : 400 got %v", t)
+	sendRequest("/api/v1/analyze-webpage?url=/dede/ggt", 400, "expected status : 400 got %v", t)
 
 }
 

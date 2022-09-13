@@ -17,4 +17,14 @@ func TestWebScraper(t *testing.T) {
 		t.Errorf("got %+v\n, wanted %+v\n", got, want)
 	}
 
+	got_2 := WebScraper("https://en.wikipedia.org/wiki/Web_scraping")
+
+	want_2 := &dto.WebPageDetail{Version: "", Title: "Web scraping - Wikipedia", InternalLink: 284,
+		ExternalLink: 84, InternalDeadIdLink: 0, InternalDeadPathLink: 0,
+		ExternalDeadLink: 5, H1: 1, H2: 9, H3: 21, H4: 0, H5: 0, H6: 0, IsWithLogin: true}
+
+	if *got_2 != *want_2 {
+		t.Errorf("got %+v\n, wanted %+v\n", got_2, want_2)
+	}
+
 }
