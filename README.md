@@ -1,5 +1,5 @@
 # Web scraping service - Test project
-This project designed for analyze a given web page URL and extract data for given formate. This data extracction developed based on two main libraries, goquery and colly. Colly developed on goquery. 
+This project is designed for analyze a given web page URL and extract data for given format. This data extraction developed based on two main libraries, goquery and colly. Colly developed on goquery. 
 
 ## Development Setup
 
@@ -42,8 +42,9 @@ This project designed for analyze a given web page URL and extract data for give
 
 -  As a Golang knowledge testing project, not worried about application security, UI design, and a hundred percent accuracy of the extracted data.
 - Designed and tested with a few URLs.
-- Designed as a separate service except for designing a monolithic web application.  
+- Designed as a separate service except for designing a monolithic web application.
+- Skiped API documentation  
 
 ##### Suggestions 
 
-- It's better to develop and deploy this as a microservice witch responsible for a single task and can follow a flat structure without a complex folder structure. And better to deploy in a serverless architecture, where we can handle lots of things without any overhead.
+- It's better to develop and deploy this as a microservice which responsible for a single task and can follow a flat structure without a complex folder structure. And better to deploy in a serverless architecture, where we can handle lots of things without any overhead.
