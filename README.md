@@ -1,4 +1,5 @@
 # Web scraping service - Test project
+This project designed for analyze a given web page URL and extract data for given formate. This data extracction developed based on two main libraries, goquery and colly. Colly developed on goquery. 
 
 ## Development Setup
 
@@ -25,7 +26,7 @@
 `docker build -t analyzer-api .`
 
 ## start api docker container
-`docker run -p 8080:8080 -it analyzer-api`
+`docker run -p 8000:8000 -it analyzer-api`
 
 ## web-client
 
